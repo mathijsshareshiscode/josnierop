@@ -1,0 +1,62 @@
+<?php
+
+add_filter( 'woocommerce_checkout_fields' , 'custom_remove_woo_checkout_fields' );
+ 
+function custom_remove_woo_checkout_fields( $fields ) {
+
+    // remove billing fields
+    unset($fields['billing']['billing_company']);
+    unset($fields['billing']['billing_address_1']);
+    unset($fields['billing']['billing_address_2']);
+    unset($fields['billing']['billing_city']);
+    unset($fields['billing']['billing_postcode']);
+    unset($fields['billing']['billing_state']);
+    unset($fields['billing']['billing_phone']);
+   
+    // remove shipping fields 
+    unset($fields['shipping']['shipping_first_name']);    
+    unset($fields['shipping']['shipping_last_name']);  
+    unset($fields['shipping']['shipping_company']);
+    unset($fields['shipping']['shipping_address_1']);
+    unset($fields['shipping']['shipping_address_2']);
+    unset($fields['shipping']['shipping_city']);
+    unset($fields['shipping']['shipping_postcode']);
+    unset($fields['shipping']['shipping_country']);
+    unset($fields['shipping']['shipping_state']);
+    
+    return $fields;
+}
+
+add_filter( 'the_title', 'woo_personalize_order_received_title', 10, 2 );
+function woo_personalize_order_received_title( $title, $id ) {
+    if ( is_order_received_page() && get_the_ID() === $id ) {
+	    global $wp;
+
+        // Get the order. Line 9 to 17 are present in order_received() in includes/shortcodes/class-wc-shortcode-checkout.php file
+        $order_id  = apply_filters( 'woocommerce_thankyou_order_id', absint( $wp->query_vars['order-received'] ) );
+        $order_key = apply_filters( 'woocommerce_thankyou_order_key', empty( $_GET['key'] ) ? '' : wc_clean( $_GET['key'] ) );
+
+        if ( $order_id > 0 ) {
+            $order = wc_get_order( $order_id );
+            if ( $order->get_order_key() != $order_key ) {
+                $order = false;
+            }
+        }
+
+        if ( isset ( $order ) ) {
+            //$title = sprintf( "Hartelijk welkom, %s! Klik hierboven op Online Cursus om meteen te beginnen. Ik heb je een mail gestuurd met wat extra informatie.", esc_html( $order->billing_first_name ) ); // use this for WooCommerce versions older then v2.7
+	    $title = sprintf( "Hartelijk welkom, %s! Klik hierboven op Online Cursus om meteen te beginnen. Ik heb je een mail gestuurd met wat extra informatie.", esc_html( $order->get_billing_first_name() ) );
+        }
+    }
+    return $title;
+}
+
+
+add_filter( 'woocommerce_continue_shopping_redirect', 'wc_custom_redirect_continue_shopping' );
+
+function wc_custom_redirect_continue_shopping() {
+  //https://www.josnierop.nl/winkel.
+  return 'https://www.josnierop.nl/winkel';
+}
+
+add_filter( 'auto_update_plugin', '__return_false' );
